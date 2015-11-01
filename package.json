@@ -1,0 +1,27 @@
+{
+  "name": "lirc-client",
+  "version": "0.0.2",
+  "description": "Connect to LIRC Daemon (Infrared)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hobbyquaker/lirc-client"
+  },
+  "keywords": [
+    "lirc",
+    "lircd",
+    "infrared",
+    "remote",
+    "control",
+    "client"
+  ],
+  "author": "Sebastian Raff <hq@ccu.io> (https://hobbyquaker.github.io)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hobbyquaker/lirc-client/issues"
+  },
+  "homepage": "https://github.com/hobbyquaker/lirc-client"
+}
