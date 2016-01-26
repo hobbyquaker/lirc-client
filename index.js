@@ -9,9 +9,13 @@ var Lirc = function (config) {
     var that = this;
 
     config = config || {};
-    config.lircHost =   config.host         || '127.0.0.1';
-    config.lircPort =   config.port         || 8765;
-    config.reconnect =  config.reconnect    || 5000;
+    if(!config.host && !config.path) {
+        config.host = '127.0.0.1';
+    }
+    if(config.host) {
+        config.port = config.port || 8765;
+    }
+    config.reconnect = config.reconnect || 5000;
 
     var client;
     var lircConnected;
@@ -102,7 +106,7 @@ var Lirc = function (config) {
     function lircConnect() {
         if (!lircConnected) {
 
-            client = net.connect({host:config.lircHost, port: config.lircPort}, function() {
+            client = net.connect(config, function() {
                 lircConnected = true;
                 that.emit('connect');
             });
