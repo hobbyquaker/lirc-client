@@ -19,6 +19,7 @@ var Lirc = function (config) {
 
     var client;
     var lircConnected;
+    var closing;
 
     var callbacks = {};
     var timeouts = {};
@@ -59,6 +60,11 @@ var Lirc = function (config) {
             if (callback) callbacks[data] = callback;
         });
 
+    };
+
+    this.close = function() {
+        closing = true;
+        client.end();
     };
 
     function parseResponse(data) {
@@ -103,6 +109,11 @@ var Lirc = function (config) {
 
     }
 
+    function reConnect() {
+        if(closing) { return; }
+        setTimeout(lircConnect, config.reconnect);
+    }
+
     function lircConnect() {
         if (!lircConnected) {
 
@@ -116,21 +127,23 @@ var Lirc = function (config) {
             });
 
             client.on('end', function () {
-                that.emit('error', 'end');
+                if(!closing) {
+                    that.emit('error', 'end');
+                }
                 lircConnected = false;
-                //lircConnect();
+                reConnect();
             });
 
             client.on('timeout', function () {
                 that.emit('error', 'timeout');
                 lircConnected = false;
-                //lircConnect();
+                reConnect();
             });
 
             client.on('close', function () {
                 lircConnected = false;
                 that.emit('disconnect');
-                setTimeout(lircConnect, config.reconnect);
+                reConnect();
             });
 
             client.on('data', function (data) {
