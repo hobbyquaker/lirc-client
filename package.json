@@ -1,6 +1,6 @@
 {
   "name": "lirc-client",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Connect to LIRC Daemon (Infrared)",
   "main": "index.js",
   "scripts": {

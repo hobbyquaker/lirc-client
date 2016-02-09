@@ -13,12 +13,6 @@ var lirc = require('lirc-client')({
   port: 8765
 });
 
-// or
-
-var lirc = require('lirc-client')({
-  path: '/var/run/lirc/lircd'
-});
-
 lirc.on('connect', function () {
     lirc.cmd('VERSION', function (err, res) {
         console.log('LIRC Version', res);
@@ -34,6 +28,13 @@ lirc.on('receive', function (remote, button, repeat) {
 });
 ```
 
+you can also connect to a unix domain socket via path option:
+```Javascript
+
+var lirc = require('lirc-client')({
+  path: '/var/run/lirc/lircd'
+});
+```
 
 
 ## Methods
@@ -53,6 +54,10 @@ Default: '127.0.0.1'
 #### port
 
 Default: 8765
+
+#### path
+
+path to a unix domain socket
 
 #### reconnect
 
