@@ -9,12 +9,17 @@ var Lirc = function (config) {
     var that = this;
 
     config = config || {};
-    config.lircHost =   config.host         || '127.0.0.1';
-    config.lircPort =   config.port         || 8765;
-    config.reconnect =  config.reconnect    || 5000;
+    if(!config.host && !config.path) {
+        config.host = '127.0.0.1';
+    }
+    if(config.host) {
+        config.port = config.port || 8765;
+    }
+    config.reconnect = config.reconnect || 5000;
 
     var client;
     var lircConnected;
+    var closing;
 
     var callbacks = {};
     var timeouts = {};
@@ -55,6 +60,11 @@ var Lirc = function (config) {
             if (callback) callbacks[data] = callback;
         });
 
+    };
+
+    this.close = function() {
+        closing = true;
+        client.end();
     };
 
     function parseResponse(data) {
@@ -99,10 +109,15 @@ var Lirc = function (config) {
 
     }
 
+    function reConnect() {
+        if(closing) { return; }
+        setTimeout(lircConnect, config.reconnect);
+    }
+
     function lircConnect() {
         if (!lircConnected) {
 
-            client = net.connect({host:config.lircHost, port: config.lircPort}, function() {
+            client = net.connect(config, function() {
                 lircConnected = true;
                 that.emit('connect');
             });
@@ -112,21 +127,23 @@ var Lirc = function (config) {
             });
 
             client.on('end', function () {
-                that.emit('error', 'end');
+                if(!closing) {
+                    that.emit('error', 'end');
+                }
                 lircConnected = false;
-                //lircConnect();
+                reConnect();
             });
 
             client.on('timeout', function () {
                 that.emit('error', 'timeout');
                 lircConnected = false;
-                //lircConnect();
+                reConnect();
             });
 
             client.on('close', function () {
                 lircConnected = false;
                 that.emit('disconnect');
-                setTimeout(lircConnect, config.reconnect);
+                reConnect();
             });
 
             client.on('data', function (data) {

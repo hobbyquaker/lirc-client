@@ -13,6 +13,12 @@ var lirc = require('lirc-client')({
   port: 8765
 });
 
+// or
+
+var lirc = require('lirc-client')({
+  path: '/var/run/lirc/lircd'
+});
+
 lirc.on('connect', function () {
     lirc.cmd('VERSION', function (err, res) {
         console.log('LIRC Version', res);
