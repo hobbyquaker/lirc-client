@@ -151,7 +151,7 @@ var Lirc = function (config) {
                 var lines = data.split('\n');
                 if (lines[lines.length - 1] === '') lines.pop();
 
-                if (data.match(/^[0-9a-f]{16} /)) {
+                if (data.match(/^[0-9a-f]{16} /) && !isIncoming) {
                     // Broadcast received
 
                     for (var i = 0; i < lines.length; i++) {
