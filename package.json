@@ -19,6 +19,10 @@
     "client"
   ],
   "author": "Sebastian Raff <hq@ccu.io> (https://hobbyquaker.github.io)",
+  "contributors": [
+    "Vincent Trumpff (https://github.com/vincent-tr)",
+    "Johann Richard (https://github.com/johannrichard)"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/hobbyquaker/lirc-client/issues"
