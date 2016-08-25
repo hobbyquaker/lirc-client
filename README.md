@@ -1,5 +1,8 @@
 # lirc-client
 
+[![npm version](https://badge.fury.io/js/lirc-client.svg)](https://badge.fury.io/js/lirc-client)
+[![License][mit-badge]][mit-url]
+
 Node.js module to connect to a [LIRC](http://www.lirc.org/) daemon.
 
 ## Usage
@@ -79,3 +82,5 @@ Default: 5000
 
 MIT © [Sebastian Raff](https://hobbyquaker.github.io)
 
+[mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg?style=flat
+[mit-url]: LICENSE
