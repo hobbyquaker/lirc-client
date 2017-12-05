@@ -1,193 +1,259 @@
-var net =           require('net');
-var util =          require('util');
-var EventEmitter =  require('events').EventEmitter;
+const net = require('net');
+const { EventEmitter } = require('events');
 
-var Lirc = function (config) {
-
-    if (!(this instanceof Lirc)) return new Lirc(config);
-
-    var that = this;
-
-    config = config || {};
-    if(!config.host && !config.path) {
-        config.host = '127.0.0.1';
-    }
-    if(config.host) {
-        config.port = config.port || 8765;
-    }
-    config.reconnect = config.reconnect || 5000;
-
-    var client;
-    var lircConnected;
-    var closing;
-
-    var callbacks = {};
-    var timeouts = {};
-
-    var incoming = [];
-    var isIncoming;
-
-    var delayed = [];
-
-    this.cmd = function (/* cmd, variable number of cmd arguments, optional callback*/) {
-
-        var args = Array.prototype.slice.call(arguments);
-        var callback;
-
-        if (Object.keys(timeouts).length) {
-            delayed.push(args);
-            return;
-        }
-
-        if (args.length > 1 && typeof args[args.length - 1] === 'function') {
-            callback = args.pop();
-        }
-
-        if (!lircConnected) {
-            if (callback) callback('not connected');
-            return;
-        }
-
-        var data = args.join(' ');
-
-        timeouts[data] = setTimeout(function () {
-            that.emit('error', 'response timeout: ' + data);
-            if (callback) delete callbacks[data];
-            delete timeouts[data];
-        }, 2500);
-
-        client.write(data + '\n', function () {
-            if (callback) callbacks[data] = callback;
-        });
-
-    };
-
-    this.close = function() {
-        closing = true;
-        client.end();
-    };
-
-    function parseResponse(data) {
-
-        if (data[0] !== 'BEGIN' || data[data.length - 1] !== 'END') {
-            return;
-        }
-
-        var cmd = data[1];
-
-        clearTimeout(timeouts[cmd]);
-        delete timeouts[cmd];
-
-        var res;
-        var payload;
-
-        if (data.length > 3) {
-            res = data[2];
-        } else {
-            that.emit(cmd); // this is used by LIRC for SIGHUP Broadcast
-            return;
-        }
-
-        if (callbacks[cmd]) {
-
-            if (data[3] === 'DATA') {
-                payload = data.slice(5, -1);
-            }
-
-            if (res === 'SUCCESS') {
-                callbacks[cmd](null, payload);
-            } else if (res === 'ERROR') {
-                callbacks[cmd](payload[0]);
-            }
-
-            delete callbacks[cmd];
-        }
-
-        if (delayed.length) {
-            that.cmd.apply(that, delayed.shift());
-        }
-
-    }
-
-    function reConnect() {
-        if(closing) { return; }
-        setTimeout(lircConnect, config.reconnect);
-    }
-
-    function lircConnect() {
-        if (!lircConnected) {
-
-            client = net.connect(config, function() {
-                lircConnected = true;
-                that.emit('connect');
-            });
-
-            client.on('error', function (data) {
-                that.emit('error', data.toString());
-            });
-
-            client.on('end', function () {
-                if(!closing) {
-                    that.emit('error', 'end');
-                }
-                lircConnected = false;
-                reConnect();
-            });
-
-            client.on('timeout', function () {
-                that.emit('error', 'timeout');
-                lircConnected = false;
-                reConnect();
-            });
-
-            client.on('close', function () {
-                lircConnected = false;
-                that.emit('disconnect');
-                reConnect();
-            });
-
-            client.on('data', function (data) {
-                data = data.toString();
-                var lines = data.split('\n');
-                if (lines[lines.length - 1] === '') lines.pop();
-
-                if (data.match(/^[0-9a-f]{16} /) && !isIncoming) {
-                    // Broadcast received
-
-                    for (var i = 0; i < lines.length; i++) {
-                        var parts = lines[i].split(' ');
-                        that.emit('receive', parts[3], parts[2], parseInt(parts[1], 10));
-                    }
-
-                } else if (data.match(/^BEGIN/)) {
-
-                    if (lines[lines.length - 1] === '') lines.pop();
-
-                    incoming = lines;
-
-                    if (lines[lines.length - 1] === 'END') {
-                        parseResponse(incoming);
-                    } else {
-                        isIncoming = true;
-                    }
-
-                } else if (isIncoming) {
-
-                    incoming = incoming.concat(lines);
-
-                    if (lines[lines.length - 1] === 'END') {
-                        isIncoming = false;
-                        parseResponse(incoming);
-                    }
-
-                }
-            });
-        }
-    }
-
-    lircConnect();
-
+module.exports = function lirc(options) {
+  return new module.exports.Lirc(options);
 };
 
-util.inherits(Lirc, EventEmitter);
-module.exports = Lirc;
+module.exports.Lirc = class Lirc extends EventEmitter {
+  /**
+   * @constructor
+   * @param {object} [config]  Configuration object.
+   * @praam {boolean} [config.autoconnect=true]  Automatically connect.
+   * @praam {string} [config.host='127.0.0.1']  Host running LIRC.
+   * @praam {number} [config.port=8765]  Port of running LIRC daemon.
+   * @praam {string} [config.path]  Path to LIRC socket.
+   * @praam {boolean} [config.reconnect=true]  Automatically reconnect.
+   * @praam {number} [config.reconnect_delay=5000]  Delay when reconnecting.
+   */
+  constructor(config = {}) {
+    super();
+
+    // simple default option handler
+    let _default = (opt, def) =>
+      this[`_${opt}`] = config[opt] === undefined ? def : config[opt];
+
+    _default('autoconnect', true);
+    _default('host', '127.0.0.1');
+    _default('port', 8765);
+    _default('path', '');
+    _default('reconnect', true);
+    _default('reconnect_delay', 5000);
+
+    this._connected = false;
+    this._connecting = false;
+    this._queue = [];
+    this._readbuffer = [];
+    this._socket = null;
+
+    this.on('rawdata', data => this._read(data));
+
+    this.on('error', msg => {
+      if (msg === 'end' && this._reconnect) {
+        this.disconnect().then(() =>
+          setTimeout(() => this.connect(), this._reconnect_delay)
+        );
+      }
+    });
+
+    // start handling send queue
+    this._handleQueue();
+
+    if (this._autoconnect) {
+      this.connect();
+    }
+  }
+
+  /**
+   * @private
+   * Handle send queue.
+   */
+  _handleQueue() {
+    let next = () => setTimeout(() => this._handleQueue(), 100);
+
+    if (this._queue.length) {
+      this._queue.shift().call().then(next).catch(next);
+    } else {
+      next();
+    }
+  }
+
+  /**
+   * @private
+   * Read and parse received data.
+   *
+   * @param {string} data  Incoming data from LIRC.
+   */
+  _read(data) {
+    let lines = data.trim().split('\n');
+
+    if (!this._readbuffer.length && (/^[0-9a-f]{16} /).test(data)) {
+      // Handle broadcasts
+      while (lines.length) {
+        this.emit('receive', ...lines.shift().split(' ').reverse());
+      }
+    } else {
+      // Handle messages
+      while (lines.length) {
+        let line = lines.shift();
+
+        if ((/^BEGIN/).test(line)) {
+          this._readbuffer.splice(0, this._readbuffer.length);
+          continue;
+        }
+
+        if ((/^END/).test(line)) {
+          let [ command, response, type, count, ...payload ] =
+            this._readbuffer.splice(0, this._readbuffer.length);
+
+          switch (response) {
+            case 'ERROR':
+              this.emit('message', payload[0], payload);
+              break;
+
+            default:
+              this.emit('message', null, payload);
+          }
+
+          continue;
+        }
+
+        this._readbuffer.push(line);
+      }
+    }
+  }
+
+  /**
+   * @private
+   * Send a command.
+   *
+   * @param {string} command  Command string to send.
+   * @return {Promise<array<string>>}  Resulting response from LIRC daemon.
+   */
+  _send(command) {
+    this._socket.write(`${command}\n`);
+
+    return new Promise((resolve, reject) =>
+      this.once('message', (err, data) => {
+        if (err)
+          reject(err, data);
+        else
+          resolve(data);
+      })
+    );
+  }
+
+  /**
+   * Send a command.
+   *
+   * @param {string} ...args  Command to send, or individual parameters.
+   * @return {Promise<array<string>>}  Resulting response from LIRC daemon.
+   */
+  send(...args) {
+    return new Promise((resolve, reject) => {
+      this._queue.push(() =>
+        this._send(args.join(' ')).then(resolve).catch(reject)
+      );
+    });
+  }
+
+  /**
+   * Tell LIRC to emit a button press.
+   *
+   * @param {string} remote  Remote name.
+   * @param {string} button  Button name.
+   * @param {number} [repeat]  Number of times to repeat.
+   * @return {Promise<array<string>>}  Response from LIRC.
+   */
+  sendOnce(remote, button, repeat='') {
+    return this.send('send_once', remote, button, repeat);
+  }
+
+  /**
+   * Tell LIRC to start emitting button presses.
+   *
+   * @param {string} remote  Remote name.
+   * @param {string} button  Button name.
+   * @return {Promise<array<string>>}  Response from LIRC.
+   */
+  sendStart(remote, button) {
+    return this.send('send_start', remote, button);
+  }
+
+  /**
+   * Tell LIRC to stop emitting a button press.
+   *
+   * @param {string} remote  Remote name.
+   * @param {string} button  Button name.
+   * @return {Promise<array<string>>}  Response from LIRC.
+   */
+  sendStop(remote, button) {
+    return this.send('send_stop', remote, button);
+  }
+
+  /**
+   * If a remote is supplied, list available buttons for remote, otherwise
+   * return list of remotes.
+   *
+   * @param {string} [remote]  Remote name.
+   * @return {Promise<array<string>>}  Response from LIRC.
+   */
+  list(remote = '') {
+    return this.send('list', remote);
+  }
+
+  /**
+   * Get LIRC version from server.
+   *
+   * @return {Promise<array<string>>}  Response from LIRC.
+   */
+  version() {
+    return this.send('version');
+  }
+
+  /**
+   * Connect to a running LIRC daemon.
+   *
+   * @return {Promise}  Resolves upon connection to server.
+   */
+  connect() {
+    return new Promise((resolve, reject) => {
+      if (this._connected)
+        return resolve();
+
+      if (this._connecting)
+        return this.once('connect', () => resolve());
+
+      let options = this._path ?
+        { path: this._path } :
+        { host: this._host, port: this._port };
+
+      this._socket = net.connect(options, () => {
+        this._socket.removeListener('error', reject);
+        this.emit('connect');
+        resolve();
+      });
+
+      this._socket.once('error', reject);
+
+      this._socket.on('close', () => this.emit('disconnect'));
+      this._socket.on('data', data => this.emit('rawdata', data.toString()));
+      this._socket.on('end', () => this.emit('error', 'end'));
+      this._socket.on('error', data => this.emit('error', data.toString()));
+      this._socket.on('timeout', () => this.emit('error', 'timeout'));
+    });
+  }
+
+  /**
+   * Disconnect from LIRC daemon and clean up socket.
+   *
+   * @return {Promise}  Resolves upon disconnect.
+   */
+  disconnect() {
+    let events = [ 'close', 'data', 'end', 'error', 'timeout' ];
+    let socket = this._socket;
+
+    this._connected = false;
+    this._connecting = false;
+    this._readbuffer.splice(0, this._readbuffer.length);
+    this._socket = null;
+
+    for (let ev in events) {
+      socket.removeAllListeners(ev);
+    }
+
+    socket.end();
+
+    return Promise.resolve();
+  }
+}

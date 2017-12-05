@@ -16,13 +16,13 @@ var lirc = require('lirc-client')({
   port: 8765
 });
 
-lirc.on('connect', function () {
-    lirc.cmd('VERSION', function (err, res) {
+lirc.on('connect', () => {
+    lirc.send('VERSION').then(res => {
         console.log('LIRC Version', res);
     });
 
-    lirc.cmd('SEND_ONCE', 'Remote1', 'Key1', function (err) {
-        if (err) console.log(err);
+    lirc.sendOnce('Remote1', 'Key1').catch(error => {
+        if (error) console.log(error);
     });
 });
 
@@ -33,7 +33,6 @@ lirc.on('receive', function (remote, button, repeat) {
 
 you can also connect to a unix domain socket via path option:
 ```Javascript
-
 var lirc = require('lirc-client')({
   path: '/var/run/lirc/lircd'
 });
@@ -42,40 +41,57 @@ var lirc = require('lirc-client')({
 
 ## Methods
 
-#### cmd( cmd, [ argument, ... ], [ callback(err, res) ] )
+#### send( command, [ argument, ... ] )
 
 see available commands here: http://www.lirc.org/html/lircd.html
 
-#### close()
+#### sendOnce( remote, button, [ count ] )
+#### sendStart( remote, button )
+#### sendStop( remote, button )
+
+#### list( [ remote ] )
+
+#### version()
+
+#### disconnect()
+#### connect()
 
 ## Options
 
+#### autoconnect
+Automatically connect to LIRC
+
+Default: true
+
 #### host
+Host where LIRC is listening
 
 Default: '127.0.0.1'
 
 #### port
+Port that LIRC is listening on
 
 Default: 8765
 
 #### path
+Path to LIRC socket
 
-path to a unix domain socket
+Example: '/var/run/lirc/lircd'
 
 #### reconnect
+Automatically reconnect to LIRC
 
+Default: true
+
+#### reconnect_delay
 Pause in milliseconds before trying to reconnect to LIRC
 
 Default: 5000
 
 ## Events
-
 #### receive(remote, button, repeat)
-
 #### error(message)
-
 #### connect
-
 #### disconnect
 
 ## License

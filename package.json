@@ -1,6 +1,6 @@
 {
   "name": "lirc-client",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Connect to LIRC Daemon (Infrared)",
   "main": "index.js",
   "scripts": {
@@ -21,7 +21,8 @@
   "author": "Sebastian Raff <hq@ccu.io> (https://hobbyquaker.github.io)",
   "contributors": [
     "Vincent Trumpff (https://github.com/vincent-tr)",
-    "Johann Richard (https://github.com/johannrichard)"
+    "Johann Richard (https://github.com/johannrichard)",
+    "Kimberly Zick (https://github.com/rummik)"
   ],
   "license": "MIT",
   "bugs": {
