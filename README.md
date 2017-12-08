@@ -1,22 +1,26 @@
 # lirc-client
 
-[![npm version](https://badge.fury.io/js/lirc-client.svg)](https://badge.fury.io/js/lirc-client)
+[![npm version](https://badge.fury.io/js/lirc-client.svg)](https://badge.fury.io/js/lirc-client) 
+[![Dependency Status](https://img.shields.io/gemnasium/hobbyquaker/lirc-client.svg?maxAge=2592000)](https://gemnasium.com/github.com/hobbyquaker/lirc-client)
+[![Build Status](https://travis-ci.org/hobbyquaker/lirc-client.svg?branch=master)](https://travis-ci.org/hobbyquaker/lirc-client)
+[![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/sindresorhus/xo)
 [![License][mit-badge]][mit-url]
+
 
 Node.js module to connect to a [LIRC](http://www.lirc.org/) daemon.
 
 **BREAKING CHANGE in v2.0 - Promises instead of Callbacks**
 
-If you prefer using callbacks you can still `npm install lirc-client@1.0.0`.
+If you prefer using callbacks or want to use Node < 6.12 you can still install the "old" v1.0: 
+`npm install lirc-client@1.0.0`.
 
 
 ## Usage
 
-````npm install lirc-client````
+`$ npm install lirc-client`
 
 ```Javascript
-
-var lirc = require('lirc-client')({
+const lirc = require('lirc-client')({
   host: '127.0.0.1',
   port: 8765
 });
@@ -38,7 +42,7 @@ lirc.on('receive', function (remote, button, repeat) {
 
 you can also connect to a unix domain socket via path option:
 ```Javascript
-var lirc = require('lirc-client')({
+const lirc = require('lirc-client')({
   path: '/var/run/lirc/lircd'
 });
 ```
@@ -49,12 +53,6 @@ var lirc = require('lirc-client')({
 
 ## Lirc
 **Kind**: global class  
-**Praam**: <code>boolean</code> [config.autoconnect=true]  Automatically connect.  
-**Praam**: <code>string</code> [config.host='127.0.0.1']  Host running LIRC.  
-**Praam**: <code>number</code> [config.port=8765]  Port of running LIRC daemon.  
-**Praam**: <code>string</code> [config.path]  Path to LIRC socket.  
-**Praam**: <code>boolean</code> [config.reconnect=true]  Automatically reconnect.  
-**Praam**: <code>number</code> [config.reconnect_delay=5000]  Delay when reconnecting.  
 
 * [Lirc](#Lirc)
     * [new module.exports.Lirc([config])](#new_Lirc_new)
@@ -71,9 +69,15 @@ var lirc = require('lirc-client')({
 
 ### new module.exports.Lirc([config])
 
-| Param | Type | Description |
-| --- | --- | --- |
-| [config] | <code>object</code> | Configuration object. |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [config] | <code>object</code> |  | Configuration object. |
+| [config.autoconnect] | <code>boolean</code> | <code>true</code> | Automatically connect. |
+| [config.host] | <code>string</code> | <code>&quot;&#x27;127.0.0.1&#x27;&quot;</code> | Host running LIRC. |
+| [config.port] | <code>number</code> | <code>8765</code> | Port of running LIRC daemon. |
+| [config.path] | <code>string</code> |  | Path to LIRC socket. |
+| [config.reconnect] | <code>boolean</code> | <code>true</code> | Automatically reconnect. |
+| [config.reconnect_delay] | <code>number</code> | <code>5000</code> | Delay when reconnecting. |
 
 <a name="Lirc+send"></a>
 
