@@ -4,7 +4,10 @@
   "description": "Connect to LIRC Daemon (Infrared)",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "camo-purge; xo"
+  },
+  "engines": {
+    "node": ">=6.12.0"
   },
   "repository": {
     "type": "git",
@@ -28,5 +31,12 @@
   "bugs": {
     "url": "https://github.com/hobbyquaker/lirc-client/issues"
   },
-  "homepage": "https://github.com/hobbyquaker/lirc-client"
+  "homepage": "https://github.com/hobbyquaker/lirc-client",
+  "devDependencies": {
+    "camo-purge": "^1.0.2",
+    "xo": "^0.18.2"
+  },
+  "xo": {
+    "space": 4
+  }
 }
