@@ -142,7 +142,7 @@ module.exports.Lirc = class Lirc extends EventEmitter {
    * Send a command.
    *
    * @see available commands http://www.lirc.org/html/lircd.html
-   * @param {string} command Command to send, or individual parameters.
+   * @param {string} command Command to send.
    * @param {string} [...args] optional parameters.
    * @return {Promise<array<string>>}  Resulting response from LIRC daemon.
    */

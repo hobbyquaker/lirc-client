@@ -90,7 +90,7 @@ Send a command.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| command | <code>string</code> | Command to send, or individual parameters. |
+| command | <code>string</code> | Command to send. |
 | [...args] | <code>string</code> | optional parameters. |
 
 <a name="Lirc+sendOnce"></a>
