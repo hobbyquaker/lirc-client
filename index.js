@@ -118,38 +118,39 @@ module.exports.Lirc = class Lirc extends EventEmitter {
 
   /**
    * @private
-   * Send a command.
-   *
-   * see available commands here: http://www.lirc.org/html/lircd.html
+   * Send a command
    *
    * @param {string} command  Command string to send.
    * @return {Promise<array<string>>}  Resulting response from LIRC daemon.
+   *
    */
     _send(command) {
         this._socket.write(`${command}\n`);
 
-        return new Promise((resolve, reject) =>
-      this.once('message', (err, data) => {
-          if (err) {
-              reject(err, data);
-          } else {
-              resolve(data);
-          }
-      })
-    );
+        return new Promise((resolve, reject) => {
+            this.once('message', (err, data) => {
+                if (err) {
+                    reject(err, data);
+                } else {
+                    resolve(data);
+                }
+            });
+        });
     }
 
   /**
    * Send a command.
    *
-   * @param {string} ...args  Command to send, or individual parameters.
+   * @see available commands http://www.lirc.org/html/lircd.html
+   * @param {string} command Command to send, or individual parameters.
+   * @param {string} [...args] optional parameters.
    * @return {Promise<array<string>>}  Resulting response from LIRC daemon.
    */
     send(...args) {
         return new Promise((resolve, reject) => {
-            this._queue.push(() =>
-        this._send(args.join(' ')).then(resolve).catch(reject)
-      );
+            this._queue.push(() => {
+                this._send(args.join(' ')).then(resolve).catch(reject)
+            });
         });
     }
 
@@ -223,8 +224,8 @@ module.exports.Lirc = class Lirc extends EventEmitter {
             }
 
             const options = this._path ?
-        {path: this._path} :
-        {host: this._host, port: this._port};
+                {path: this._path} :
+                {host: this._host, port: this._port};
 
             this._socket = net.connect(options, () => {
                 this._socket.removeListener('error', reject);

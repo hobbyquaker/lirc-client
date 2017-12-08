@@ -56,7 +56,7 @@ const lirc = require('lirc-client')({
 
 * [Lirc](#Lirc)
     * [new module.exports.Lirc([config])](#new_Lirc_new)
-    * [.send()](#Lirc+send) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+    * [.send(command)](#Lirc+send) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
     * [.sendOnce(remote, button, [repeat])](#Lirc+sendOnce) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
     * [.sendStart(remote, button)](#Lirc+sendStart) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
     * [.sendStop(remote, button)](#Lirc+sendStop) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
@@ -81,15 +81,17 @@ const lirc = require('lirc-client')({
 
 <a name="Lirc+send"></a>
 
-### lirc.send() ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+### lirc.send(command) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
 Send a command.
 
 **Kind**: instance method of [<code>Lirc</code>](#Lirc)  
 **Returns**: <code>Promise.&lt;array.&lt;string&gt;&gt;</code> - Resulting response from LIRC daemon.  
+**See**: available commands http://www.lirc.org/html/lircd.html  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| ...args | <code>string</code> | Command to send, or individual parameters. |
+| command | <code>string</code> | Command to send, or individual parameters. |
+| [...args] | <code>string</code> | optional parameters. |
 
 <a name="Lirc+sendOnce"></a>
 
