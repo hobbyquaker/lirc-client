@@ -1,7 +1,11 @@
 # lirc-client
 
-[![npm version](https://badge.fury.io/js/lirc-client.svg)](https://badge.fury.io/js/lirc-client)
+[![npm version](https://badge.fury.io/js/lirc-client.svg)](https://badge.fury.io/js/lirc-client) 
+[![Dependency Status](https://img.shields.io/gemnasium/hobbyquaker/lirc-client.svg?maxAge=2592000)](https://gemnasium.com/github.com/hobbyquaker/lirc-client)
+[![Build Status](https://travis-ci.org/hobbyquaker/lirc-client.svg?branch=master)](https://travis-ci.org/hobbyquaker/lirc-client)
+[![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/sindresorhus/xo)
 [![License][mit-badge]][mit-url]
+
 
 Node.js module to connect to a [LIRC](http://www.lirc.org/) daemon.
 
