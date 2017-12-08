@@ -11,12 +11,12 @@ module.exports.Lirc = class Lirc extends EventEmitter {
   /**
    * @constructor
    * @param {object} [config]  Configuration object.
-   * @praam {boolean} [config.autoconnect=true]  Automatically connect.
-   * @praam {string} [config.host='127.0.0.1']  Host running LIRC.
-   * @praam {number} [config.port=8765]  Port of running LIRC daemon.
-   * @praam {string} [config.path]  Path to LIRC socket.
-   * @praam {boolean} [config.reconnect=true]  Automatically reconnect.
-   * @praam {number} [config.reconnect_delay=5000]  Delay when reconnecting.
+   * @param {boolean} [config.autoconnect=true]  Automatically connect.
+   * @param {string} [config.host='127.0.0.1']  Host running LIRC.
+   * @param {number} [config.port=8765]  Port of running LIRC daemon.
+   * @param {string} [config.path]  Path to LIRC socket.
+   * @param {boolean} [config.reconnect=true]  Automatically reconnect.
+   * @param {number} [config.reconnect_delay=5000]  Delay when reconnecting.
    */
     constructor(config = {}) {
         super();
