@@ -7,16 +7,16 @@ Node.js module to connect to a [LIRC](http://www.lirc.org/) daemon.
 
 **BREAKING CHANGE in v2.0 - Promises instead of Callbacks**
 
-If you prefer using callbacks you can still `npm install lirc-client@1.0.0`.
+If you prefer using callbacks or want to use Node < 6.12 you can still install the "old" v1.0: 
+`npm install lirc-client@1.0.0`.
 
 
 ## Usage
 
-````npm install lirc-client````
+`$ npm install lirc-client`
 
 ```Javascript
-
-var lirc = require('lirc-client')({
+const lirc = require('lirc-client')({
   host: '127.0.0.1',
   port: 8765
 });
@@ -38,7 +38,7 @@ lirc.on('receive', function (remote, button, repeat) {
 
 you can also connect to a unix domain socket via path option:
 ```Javascript
-var lirc = require('lirc-client')({
+const lirc = require('lirc-client')({
   path: '/var/run/lirc/lircd'
 });
 ```
