@@ -12,7 +12,7 @@ Node.js module to connect to a [LIRC](http://www.lirc.org/) daemon.
 **BREAKING CHANGE in v2.0 - Promises instead of Callbacks**
 
 If you prefer using callbacks or want to use Node < 6.12 you can still install the "old" v1.0: 
-`npm install lirc-client@1.0.0`.
+`npm install lirc-client@1.0.0`. The "old" Readme is here: https://github.com/hobbyquaker/lirc-client/blob/8d6da5a57064b9a59cc170ecae6a86278e006eb6/README.md
 
 
 ## Usage
