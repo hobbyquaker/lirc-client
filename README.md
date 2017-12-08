@@ -43,61 +43,125 @@ var lirc = require('lirc-client')({
 });
 ```
 
+## API
 
-## Methods
+<a name="Lirc"></a>
 
-#### send( command, [ argument, ... ] )
+## Lirc
+**Kind**: global class  
+**Praam**: <code>boolean</code> [config.autoconnect=true]  Automatically connect.  
+**Praam**: <code>string</code> [config.host='127.0.0.1']  Host running LIRC.  
+**Praam**: <code>number</code> [config.port=8765]  Port of running LIRC daemon.  
+**Praam**: <code>string</code> [config.path]  Path to LIRC socket.  
+**Praam**: <code>boolean</code> [config.reconnect=true]  Automatically reconnect.  
+**Praam**: <code>number</code> [config.reconnect_delay=5000]  Delay when reconnecting.  
 
-see available commands here: http://www.lirc.org/html/lircd.html
+* [Lirc](#Lirc)
+    * [new module.exports.Lirc([config])](#new_Lirc_new)
+    * [.send()](#Lirc+send) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+    * [.sendOnce(remote, button, [repeat])](#Lirc+sendOnce) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+    * [.sendStart(remote, button)](#Lirc+sendStart) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+    * [.sendStop(remote, button)](#Lirc+sendStop) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+    * [.list([remote])](#Lirc+list) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+    * [.version()](#Lirc+version) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+    * [.connect()](#Lirc+connect) ⇒ <code>Promise</code>
+    * [.disconnect()](#Lirc+disconnect) ⇒ <code>Promise</code>
 
-#### sendOnce( remote, button, [ count ] )
-#### sendStart( remote, button )
-#### sendStop( remote, button )
+<a name="new_Lirc_new"></a>
 
-#### list( [ remote ] )
+### new module.exports.Lirc([config])
 
-#### version()
+| Param | Type | Description |
+| --- | --- | --- |
+| [config] | <code>object</code> | Configuration object. |
 
-#### disconnect()
-#### connect()
+<a name="Lirc+send"></a>
 
-## Options
+### lirc.send() ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+Send a command.
 
-#### autoconnect
-Automatically connect to LIRC
+**Kind**: instance method of [<code>Lirc</code>](#Lirc)  
+**Returns**: <code>Promise.&lt;array.&lt;string&gt;&gt;</code> - Resulting response from LIRC daemon.  
 
-Default: true
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>string</code> | Command to send, or individual parameters. |
 
-#### host
-Host where LIRC is listening
+<a name="Lirc+sendOnce"></a>
 
-Default: '127.0.0.1'
+### lirc.sendOnce(remote, button, [repeat]) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+Tell LIRC to emit a button press.
 
-#### port
-Port that LIRC is listening on
+**Kind**: instance method of [<code>Lirc</code>](#Lirc)  
+**Returns**: <code>Promise.&lt;array.&lt;string&gt;&gt;</code> - Response from LIRC.  
 
-Default: 8765
+| Param | Type | Description |
+| --- | --- | --- |
+| remote | <code>string</code> | Remote name. |
+| button | <code>string</code> | Button name. |
+| [repeat] | <code>number</code> | Number of times to repeat. |
 
-#### path
-Path to LIRC socket
+<a name="Lirc+sendStart"></a>
 
-Example: '/var/run/lirc/lircd'
+### lirc.sendStart(remote, button) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+Tell LIRC to start emitting button presses.
 
-#### reconnect
-Automatically reconnect to LIRC
+**Kind**: instance method of [<code>Lirc</code>](#Lirc)  
+**Returns**: <code>Promise.&lt;array.&lt;string&gt;&gt;</code> - Response from LIRC.  
 
-Default: true
+| Param | Type | Description |
+| --- | --- | --- |
+| remote | <code>string</code> | Remote name. |
+| button | <code>string</code> | Button name. |
 
-#### reconnect_delay
-Pause in milliseconds before trying to reconnect to LIRC
+<a name="Lirc+sendStop"></a>
 
-Default: 5000
+### lirc.sendStop(remote, button) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+Tell LIRC to stop emitting a button press.
 
-## Events
-#### receive(remote, button, repeat)
-#### error(message)
-#### connect
-#### disconnect
+**Kind**: instance method of [<code>Lirc</code>](#Lirc)  
+**Returns**: <code>Promise.&lt;array.&lt;string&gt;&gt;</code> - Response from LIRC.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| remote | <code>string</code> | Remote name. |
+| button | <code>string</code> | Button name. |
+
+<a name="Lirc+list"></a>
+
+### lirc.list([remote]) ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+If a remote is supplied, list available buttons for remote, otherwise
+return list of remotes.
+
+**Kind**: instance method of [<code>Lirc</code>](#Lirc)  
+**Returns**: <code>Promise.&lt;array.&lt;string&gt;&gt;</code> - Response from LIRC.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [remote] | <code>string</code> | Remote name. |
+
+<a name="Lirc+version"></a>
+
+### lirc.version() ⇒ <code>Promise.&lt;array.&lt;string&gt;&gt;</code>
+Get LIRC version from server.
+
+**Kind**: instance method of [<code>Lirc</code>](#Lirc)  
+**Returns**: <code>Promise.&lt;array.&lt;string&gt;&gt;</code> - Response from LIRC.  
+<a name="Lirc+connect"></a>
+
+### lirc.connect() ⇒ <code>Promise</code>
+Connect to a running LIRC daemon.
+
+**Kind**: instance method of [<code>Lirc</code>](#Lirc)  
+**Returns**: <code>Promise</code> - Resolves upon connection to server.  
+<a name="Lirc+disconnect"></a>
+
+### lirc.disconnect() ⇒ <code>Promise</code>
+Disconnect from LIRC daemon and clean up socket.
+
+**Kind**: instance method of [<code>Lirc</code>](#Lirc)  
+**Returns**: <code>Promise</code> - Resolves upon disconnect.  
+
 
 ## License
 

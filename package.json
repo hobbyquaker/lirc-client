@@ -4,7 +4,7 @@
   "description": "Connect to LIRC Daemon (Infrared)",
   "main": "index.js",
   "scripts": {
-    "test": "camo-purge; xo"
+    "test": "grunt test"
   },
   "engines": {
     "node": ">=6.12.0"
@@ -33,8 +33,14 @@
   },
   "homepage": "https://github.com/hobbyquaker/lirc-client",
   "devDependencies": {
-    "camo-purge": "^1.0.2",
-    "xo": "^0.18.2"
+    "camo-purge": "latest",
+    "grunt": "latest",
+    "grunt-cli": "latest",
+    "grunt-contrib-concat": "latest",
+    "grunt-jsdoc-to-markdown": "latest",
+    "grunt-shell": "latest",
+    "grunt-xo": "latest",
+    "xo": "latest"
   },
   "xo": {
     "space": 4
