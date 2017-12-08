@@ -5,6 +5,11 @@
 
 Node.js module to connect to a [LIRC](http://www.lirc.org/) daemon.
 
+**BREAKING CHANGE in v2.0 - Promises instead of Callbacks**
+
+If you prefer using callbacks you can still `npm install lirc-client@1.0.0`.
+
+
 ## Usage
 
 ````npm install lirc-client````
