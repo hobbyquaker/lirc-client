@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 
 const net = require('net');
-const { EventEmitter } = require('events');
+const {EventEmitter} = require('events');
 
 module.exports = function (options) {
     return new module.exports.Lirc(options);
@@ -252,12 +252,21 @@ module.exports.Lirc = class Lirc extends EventEmitter {
                 {path: this._path} :
                 {host: this._host, port: this._port};
 
-            this._socket = net.connect(options, () => {
+            let socket = this._socket = net.connect(options, () => {
+                // socket was cleaned up before this event fired
+                if (!this._socket) {
+                    socket.end();
+                    return;
+                }
+
                 this._socket.removeListener('error', reject);
+                this._connected = true;
+                this._connecting = false;
                 this.emit('connect');
                 resolve();
             });
 
+            this._connecting = true;
             this._socket.once('error', reject);
 
             this._socket.on('close', () => this.emit('disconnect'));
@@ -289,7 +298,7 @@ module.exports.Lirc = class Lirc extends EventEmitter {
         this._readbuffer.splice(0, this._readbuffer.length);
         this._socket = null;
 
-        Object.keys(events).forEach(ev => {
+        events.forEach(ev => {
             socket.removeAllListeners(ev);
         });
 
