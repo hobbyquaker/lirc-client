@@ -15,6 +15,7 @@ module.exports.Lirc = class Lirc extends EventEmitter {
      * @param {string} [config.host='127.0.0.1']  Host running LIRC.
      * @param {number} [config.port=8765]  Port of running LIRC daemon.
      * @param {string} [config.path]  Path to LIRC socket.
+     * @param {number} [config.queue_delay=250]  Send queue delay.
      * @param {boolean} [config.reconnect=true]  Automatically reconnect.
      * @param {number} [config.reconnect_delay=5000]  Delay when reconnecting.
      */
@@ -30,9 +31,9 @@ module.exports.Lirc = class Lirc extends EventEmitter {
         _default('host', '127.0.0.1');
         _default('port', 8765);
         _default('path', '');
+        _default('queue_delay', 250);
         _default('reconnect', true);
         _default('reconnect_delay', 5000);
-        _default('queueDelay', 250);
 
         this._connected = false;
         this._connecting = false;
@@ -71,7 +72,7 @@ module.exports.Lirc = class Lirc extends EventEmitter {
         const next = () => {
             this._queueTimeout = setTimeout(
                 () => this._handleQueue(true),
-                this._queueDelay
+                this._queue_delay
             );
         };
 
