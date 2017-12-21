@@ -76,6 +76,16 @@ describe('Lirc', () => {
         });
     });
 
+
+    describe('#_read()', () => {
+        it('should correctly parse incoming data');
+    });
+
+    describe('#_send()', () => {
+        it('should call callback with data if supplied');
+        it('should resolve with data');
+    });
+
     describe('#send()', () => {
         it('should call #_handleQueue() on next tick', () => {
             lirc._handleQueue = sinon.spy();
