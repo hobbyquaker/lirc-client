@@ -32,12 +32,14 @@ module.exports.Lirc = class Lirc extends EventEmitter {
         _default('path', '');
         _default('reconnect', true);
         _default('reconnect_delay', 5000);
+        _default('queueDelay', 250);
 
         this._connected = false;
         this._connecting = false;
         this._queue = [];
         this._readbuffer = [];
         this._socket = null;
+        this._queueTimeout = null;
 
         this.on('rawdata', data => this._read(data));
 
@@ -49,8 +51,8 @@ module.exports.Lirc = class Lirc extends EventEmitter {
             }
         });
 
-        // Start handling send queue
-        this._handleQueue();
+        // Clean the queue upon connect
+        this.on('connect', () => this._handleQueue());
 
         if (this._autoconnect) {
             this.connect();
@@ -61,13 +63,22 @@ module.exports.Lirc = class Lirc extends EventEmitter {
      * @private
      * Handle send queue.
      */
-    _handleQueue() {
-        const next = () => setTimeout(() => this._handleQueue(), 100);
+    _handleQueue(calledSelf = false) {
+        if (this._queueTimeout && !calledSelf) {
+            return;
+        }
 
-        if (this._queue.length > 0) {
+        const next = () => {
+            this._queueTimeout = setTimeout(
+                () => this._handleQueue(true),
+                this._queueDelay
+            );
+        };
+
+        if (this._connected && this._queue.length > 0) {
             this._queue.shift().call().then(next).catch(next);
         } else {
-            next();
+            this._queueTimeout = null;
         }
     }
 
@@ -160,17 +171,13 @@ module.exports.Lirc = class Lirc extends EventEmitter {
             callback = args.pop();
         }
 
-        let promise = new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this._queue.push(() => {
-                this._send(args.join(' ')).then(resolve).catch(reject)
+                return this._send(args.join(' '), callback).then(resolve).catch(reject)
             });
+
+            this._handleQueue();
         });
-
-        if (typeof callback === 'function') {
-            promise.then(data => callback(null, data)).catch(callback);
-        }
-
-        return promise;
     }
 
     /**
@@ -182,7 +189,7 @@ module.exports.Lirc = class Lirc extends EventEmitter {
      * @param {function} [callback]  Optional callback.
      * @return {Promise<array<string>>}  Response from LIRC.
      */
-    sendOnce(remote, button, repeat = '', callback) {
+    sendOnce(remote, button, repeat, callback) {
         return this.send('send_once', remote, button, repeat, callback);
     }
 
@@ -252,18 +259,14 @@ module.exports.Lirc = class Lirc extends EventEmitter {
                 {path: this._path} :
                 {host: this._host, port: this._port};
 
-            let socket = this._socket = net.connect(options, () => {
-                // socket was cleaned up before this event fired
-                if (!this._socket) {
-                    socket.end();
-                    return;
+            this._socket = net.connect(options, () => {
+                if (this._socket !== null) {
+                    this._socket.removeListener('error', reject);
+                    this._connected = true;
+                    this._connecting = false;
+                    this.emit('connect');
+                    resolve();
                 }
-
-                this._socket.removeListener('error', reject);
-                this._connected = true;
-                this._connecting = false;
-                this.emit('connect');
-                resolve();
             });
 
             this._connecting = true;
@@ -298,11 +301,13 @@ module.exports.Lirc = class Lirc extends EventEmitter {
         this._readbuffer.splice(0, this._readbuffer.length);
         this._socket = null;
 
-        events.forEach(ev => {
-            socket.removeAllListeners(ev);
-        });
+        if (socket !== null) {
+            events.forEach(ev => {
+                socket.removeAllListeners(ev);
+            });
 
-        socket.end();
+            socket.end();
+        }
 
         if (typeof callback === 'function') {
             callback();
