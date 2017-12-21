@@ -177,7 +177,7 @@ module.exports.Lirc = class Lirc extends EventEmitter {
                 return this._send(args.join(' '), callback).then(resolve).catch(reject)
             });
 
-            this._handleQueue();
+            setImmediate(() => this._handleQueue());
         });
     }
 
