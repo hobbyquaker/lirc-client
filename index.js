@@ -37,9 +37,9 @@ module.exports.Lirc = class Lirc extends EventEmitter {
         this._connected = false;
         this._connecting = false;
         this._queue = [];
+        this._queueTimeout = null;
         this._readbuffer = [];
         this._socket = null;
-        this._queueTimeout = null;
 
         this.on('rawdata', data => this._read(data));
 
