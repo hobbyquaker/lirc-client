@@ -117,31 +117,56 @@ describe('Lirc', () => {
     });
 
     describe('#sendOnce()', () => {
-        it('should call #send with expected args');
+        it('should call #send() with expected args', () => {
+            lirc.send = sinon.spy(lirc, 'send');
+            lirc.sendOnce('tv', 'power');
+            lirc.send.should.have.been.calledWith('send_once', 'tv', 'power');
+        });
+
         it('should call callback with data if supplied');
         it('should resolve with data');
     });
 
     describe('#sendStart()', () => {
-        it('should call #send with expected args');
+        it('should call #send() with expected args', () => {
+            lirc.send = sinon.spy(lirc, 'send');
+            lirc.sendStart('tv', 'power');
+            lirc.send.should.have.been.calledWith('send_start', 'tv', 'power');
+        });
+
         it('should call callback with data if supplied');
         it('should resolve with data');
     });
 
     describe('#sendStop()', () => {
-        it('should call #send with expected args');
+        it('should call #send() with expected args', () => {
+            lirc.send = sinon.spy(lirc, 'send');
+            lirc.sendStop('tv', 'power');
+            lirc.send.should.have.been.calledWith('send_stop', 'tv', 'power');
+        });
+
         it('should call callback with data if supplied');
         it('should resolve with data');
     });
 
     describe('#list()', () => {
-        it('should call #send with expected args');
+        it('should call #send() with expected args', () => {
+            lirc.send = sinon.spy(lirc, 'send');
+            lirc.list('tv');
+            lirc.send.should.have.been.calledWith('list', 'tv');
+        });
+
         it('should call callback with data if supplied');
         it('should resolve with data');
     });
 
     describe('#version()', () => {
-        it('should call #send with expected args');
+        it('should call #send() with expected args', () => {
+            lirc.send = sinon.spy(lirc, 'send');
+            lirc.version();
+            lirc.send.should.have.been.calledWith('version');
+        });
+
         it('should call callback with data if supplied');
         it('should resolve with data');
     });
