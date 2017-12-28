@@ -104,6 +104,14 @@ describe('Lirc', () => {
             lirc._queue[0].should.be.a('function');
         });
 
+        it('should create a function that calls #_send() with expected args', () => {
+            lirc._send = sinon.stub(lirc, '_send').resolves();
+            lirc._connected = true;
+            lirc.send('test', 'one');
+            lirc._queue[0]();
+            lirc._send.should.have.been.calledWith('test one');
+        });
+
         it('should call callback with data if supplied');
         it('should resolve with data');
     });
