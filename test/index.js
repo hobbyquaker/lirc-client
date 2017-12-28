@@ -82,24 +82,26 @@ describe('Lirc', () => {
     });
 
     describe('#_send()', () => {
+        it('should write data to socket');
         it('should call callback with data if supplied');
         it('should resolve with data');
     });
 
     describe('#send()', () => {
         it('should call #_handleQueue() on next tick', () => {
-            lirc._handleQueue = sinon.spy();
+            lirc._handleQueue = sinon.spy(lirc, '_handleQueue');
             lirc.send();
             clock.next();
             lirc._handleQueue.should.have.been.called;
         });
 
-        it('should append to the #_queue when when called', () => {
-            lirc._send = sinon.stub().resolves();
+        it('should append a function to the #_queue when when called', () => {
+            lirc._send = sinon.stub(lirc, '_send').resolves();
             lirc._connected = true;
             lirc._queue.length.should.equal(0);
             lirc.send();
             lirc._queue.length.should.equal(1);
+            lirc._queue[0].should.be.a('function');
         });
 
         it('should call callback with data if supplied');
