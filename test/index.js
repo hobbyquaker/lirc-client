@@ -21,6 +21,10 @@ describe('Lirc', () => {
         global.Promise = promisePolyfill;
         clock = sinon.useFakeTimers();
         mitm = Mitm();
+        mitm.once('connection', _socket => {
+            socket = _socket;
+            socket.setEncoding('utf8');
+        });
 
         lirc = new Lirc({ 
             autoconnect: false,
@@ -78,11 +82,59 @@ describe('Lirc', () => {
 
 
     describe('#_read()', () => {
-        it('should correctly parse incoming data');
+        it('should handle standard messages', done => {
+            lirc.once('message', (err, data) => {
+                should.not.exist(err);
+                data.should.deep.equal(['0.9.4c']);
+                done();
+            });
+
+            lirc._read(`
+                BEGIN
+                version
+                SUCCESS
+                DATA
+                1
+                0.9.4c
+                END
+            `.replace(/^ +/gm, ''));
+        });
+
+        it('should handle error messages', done => {
+            lirc.once('message', (err, data) => {
+                err.should.equal('bad send packet');
+                data.should.deep.equal(['bad send packet']);
+                done();
+            });
+
+            lirc._read(`
+                BEGIN
+
+                ERROR
+                DATA
+                1
+                bad send packet
+                END
+            `.replace(/^ +/gm, ''));
+        });
+
+        it('should handle received button presses');
     });
 
     describe('#_send()', () => {
-        it('should write data to socket');
+        it('should write data to socket', done => {
+            lirc.connect().then(() => {
+                lirc._send('test');
+
+                socket.once('data', string => {
+                    string.should.equal('test\n');
+                    done();
+                });
+            });
+
+            clock.runAll();
+        });
+
         it('should call callback with data if supplied');
         it('should resolve with data');
     });
