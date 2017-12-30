@@ -118,7 +118,17 @@ describe('Lirc', () => {
             `.replace(/^ +/gm, ''));
         });
 
-        it('should handle received button presses');
+        it('should handle received button presses', done => {
+            lirc.once('receive', (remote, button, status, thing) => {
+                remote.should.equal('remote1');
+                button.should.equal('button1');
+                status.should.equal('00');
+                thing.should.equal('0000000000000000');
+                done();
+            });
+
+            lirc._read('0000000000000000 00 button1 remote1\n');
+        });
     });
 
     describe('#_send()', () => {
