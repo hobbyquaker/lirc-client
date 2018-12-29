@@ -6,6 +6,7 @@ const promiseBuiltin = Promise;
 const promisePolyfill = require('promise-polyfill');
 const sinon = require('sinon');
 
+const ltrimg = string => string.replace(/^ +/gm, '');
 const should = chai.should();
 
 chai.use(require('sinon-chai'));
@@ -17,9 +18,32 @@ describe('Lirc', () => {
     let socket;
     let clock;
 
+    let versionResponse = ltrimg(`
+        BEGIN
+        version
+        SUCCESS
+        DATA
+        1
+        0.9.4c
+        END
+    `);
+
+    let errorResponse = ltrimg(`
+        BEGIN
+
+        ERROR
+        DATA
+        1
+        bad send packet
+        END
+    `);
+
     beforeEach(() => {
         global.Promise = promisePolyfill;
-        clock = sinon.useFakeTimers();
+        clock = sinon.useFakeTimers({
+            toFake: [ 'setTimeout', 'setImmediate', 'setInterval', 'nextTick' ],
+        });
+
         mitm = Mitm();
         mitm.once('connection', _socket => {
             socket = _socket;
@@ -89,15 +113,7 @@ describe('Lirc', () => {
                 done();
             });
 
-            lirc._read(`
-                BEGIN
-                version
-                SUCCESS
-                DATA
-                1
-                0.9.4c
-                END
-            `.replace(/^ +/gm, ''));
+            lirc._read(versionResponse);
         });
 
         it('should handle error messages', done => {
@@ -107,15 +123,7 @@ describe('Lirc', () => {
                 done();
             });
 
-            lirc._read(`
-                BEGIN
-
-                ERROR
-                DATA
-                1
-                bad send packet
-                END
-            `.replace(/^ +/gm, ''));
+            lirc._read(errorResponse);
         });
 
         it('should handle received button presses', done => {
@@ -132,6 +140,14 @@ describe('Lirc', () => {
     });
 
     describe('#_send()', () => {
+        beforeEach(() => {
+            lirc.connect().then(() => 
+                socket.once('data', (...args) => {
+                    socket.write(versionResponse);
+                })
+            );
+        });
+
         it('should write data to socket', done => {
             lirc.connect().then(() => {
                 lirc._send('test');
@@ -145,8 +161,27 @@ describe('Lirc', () => {
             clock.runAll();
         });
 
-        it('should call callback with data if supplied');
-        it('should resolve with data');
+        it('should call callback with data if supplied', done => {
+            lirc.connect().then(() => {
+                lirc._send('version', (err, data) => {
+                    data.should.deep.equal([ '0.9.4c' ]);
+                    done();
+                });
+            });
+
+            clock.runAll();
+        });
+
+        it('should resolve with data', done => {
+            lirc.connect().then(() => {
+                lirc._send('version').then(data => {
+                    data.should.deep.equal([ '0.9.4c' ]);
+                    done();
+                });
+            });
+
+            clock.runAll();
+        });
     });
 
     describe('#send()', () => {
@@ -174,8 +209,14 @@ describe('Lirc', () => {
             lirc._send.should.have.been.calledWith('test one');
         });
 
-        it('should call callback with data if supplied');
-        it('should resolve with data');
+        it('should call #_send() with callback function if callback is passed', () => {
+            let callback = sinon.stub();
+            lirc._send = sinon.stub(lirc, '_send').resolves();
+            lirc._connected = true;
+            lirc.send('test', 'one', callback);
+            lirc._queue[0]();
+            lirc._send.should.have.been.calledWith('test one', callback);
+        });
     });
 
     describe('#sendOnce()', () => {
@@ -184,9 +225,6 @@ describe('Lirc', () => {
             lirc.sendOnce('tv', 'power');
             lirc.send.should.have.been.calledWith('send_once', 'tv', 'power');
         });
-
-        it('should call callback with data if supplied');
-        it('should resolve with data');
     });
 
     describe('#sendStart()', () => {
@@ -195,9 +233,6 @@ describe('Lirc', () => {
             lirc.sendStart('tv', 'power');
             lirc.send.should.have.been.calledWith('send_start', 'tv', 'power');
         });
-
-        it('should call callback with data if supplied');
-        it('should resolve with data');
     });
 
     describe('#sendStop()', () => {
@@ -206,9 +241,6 @@ describe('Lirc', () => {
             lirc.sendStop('tv', 'power');
             lirc.send.should.have.been.calledWith('send_stop', 'tv', 'power');
         });
-
-        it('should call callback with data if supplied');
-        it('should resolve with data');
     });
 
     describe('#list()', () => {
@@ -217,9 +249,6 @@ describe('Lirc', () => {
             lirc.list('tv');
             lirc.send.should.have.been.calledWith('list', 'tv');
         });
-
-        it('should call callback with data if supplied');
-        it('should resolve with data');
     });
 
     describe('#version()', () => {
@@ -228,9 +257,6 @@ describe('Lirc', () => {
             lirc.version();
             lirc.send.should.have.been.calledWith('version');
         });
-
-        it('should call callback with data if supplied');
-        it('should resolve with data');
     });
 
     describe('#connect()', () => {
