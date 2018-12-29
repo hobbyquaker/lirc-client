@@ -40,6 +40,7 @@
     "grunt-cli": "latest",
     "grunt-contrib-concat": "latest",
     "grunt-jsdoc-to-markdown": "latest",
+    "grunt-mocha-test": "^0.13.3",
     "grunt-shell": "latest",
     "grunt-xo": "latest",
     "mitm": "^1.3.3",
