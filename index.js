@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 
 const net = require('net');
-const { EventEmitter } = require('events');
+const {EventEmitter} = require('events');
 
 module.exports = function (options) {
     return new module.exports.Lirc(options);
@@ -15,6 +15,7 @@ module.exports.Lirc = class Lirc extends EventEmitter {
      * @param {string} [config.host='127.0.0.1']  Host running LIRC.
      * @param {number} [config.port=8765]  Port of running LIRC daemon.
      * @param {string} [config.path]  Path to LIRC socket.
+     * @param {number} [config.queue_delay=250]  Send queue delay.
      * @param {boolean} [config.reconnect=true]  Automatically reconnect.
      * @param {number} [config.reconnect_delay=5000]  Delay when reconnecting.
      */
@@ -30,12 +31,14 @@ module.exports.Lirc = class Lirc extends EventEmitter {
         _default('host', '127.0.0.1');
         _default('port', 8765);
         _default('path', '');
+        _default('queue_delay', 250);
         _default('reconnect', true);
         _default('reconnect_delay', 5000);
 
         this._connected = false;
         this._connecting = false;
         this._queue = [];
+        this._queueTimeout = null;
         this._readbuffer = [];
         this._socket = null;
 
@@ -49,8 +52,8 @@ module.exports.Lirc = class Lirc extends EventEmitter {
             }
         });
 
-        // Start handling send queue
-        this._handleQueue();
+        // Clean the queue upon connect
+        this.on('connect', () => this._handleQueue());
 
         if (this._autoconnect) {
             this.connect();
@@ -61,13 +64,22 @@ module.exports.Lirc = class Lirc extends EventEmitter {
      * @private
      * Handle send queue.
      */
-    _handleQueue() {
-        const next = () => setTimeout(() => this._handleQueue(), 100);
+    _handleQueue(calledSelf = false) {
+        if (this._queueTimeout && !calledSelf) {
+            return;
+        }
 
-        if (this._queue.length > 0) {
+        const next = () => {
+            this._queueTimeout = setTimeout(
+                () => this._handleQueue(true),
+                this._queue_delay
+            );
+        };
+
+        if (this._connected && this._queue.length > 0) {
             this._queue.shift().call().then(next).catch(next);
         } else {
-            next();
+            this._queueTimeout = null;
         }
     }
 
@@ -151,6 +163,7 @@ module.exports.Lirc = class Lirc extends EventEmitter {
      * @see available commands http://www.lirc.org/html/lircd.html
      * @param {string} command Command to send.
      * @param {string} [...args] optional parameters.
+     * @param {string} [callback] optional callback.
      * @return {Promise<array<string>>}  Resulting response from LIRC daemon.
      */
     send(...args) {
@@ -160,17 +173,13 @@ module.exports.Lirc = class Lirc extends EventEmitter {
             callback = args.pop();
         }
 
-        let promise = new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this._queue.push(() => {
-                this._send(args.join(' ')).then(resolve).catch(reject)
+                return this._send(args.join(' '), callback).then(resolve).catch(reject)
             });
+
+            setImmediate(() => this._handleQueue());
         });
-
-        if (typeof callback === 'function') {
-            promise.then(data => callback(null, data)).catch(callback);
-        }
-
-        return promise;
     }
 
     /**
@@ -182,7 +191,7 @@ module.exports.Lirc = class Lirc extends EventEmitter {
      * @param {function} [callback]  Optional callback.
      * @return {Promise<array<string>>}  Response from LIRC.
      */
-    sendOnce(remote, button, repeat = '', callback) {
+    sendOnce(remote, button, repeat, callback) {
         return this.send('send_once', remote, button, repeat, callback);
     }
 
@@ -253,11 +262,16 @@ module.exports.Lirc = class Lirc extends EventEmitter {
                 {host: this._host, port: this._port};
 
             this._socket = net.connect(options, () => {
-                this._socket.removeListener('error', reject);
-                this.emit('connect');
-                resolve();
+                if (this._socket !== null) {
+                    this._socket.removeListener('error', reject);
+                    this._connected = true;
+                    this._connecting = false;
+                    this.emit('connect');
+                    resolve();
+                }
             });
 
+            this._connecting = true;
             this._socket.once('error', reject);
 
             this._socket.on('close', () => this.emit('disconnect'));
@@ -289,11 +303,13 @@ module.exports.Lirc = class Lirc extends EventEmitter {
         this._readbuffer.splice(0, this._readbuffer.length);
         this._socket = null;
 
-        Object.keys(events).forEach(ev => {
-            socket.removeAllListeners(ev);
-        });
+        if (socket !== null) {
+            events.forEach(ev => {
+                socket.removeAllListeners(ev);
+            });
 
-        socket.end();
+            socket.end();
+        }
 
         if (typeof callback === 'function') {
             callback();
